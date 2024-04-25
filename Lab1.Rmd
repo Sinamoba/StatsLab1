@@ -1,6 +1,5 @@
 ---
-title: "Lab3"
-author: "SinaMoBa"
+title: "Lab 3"
 date: "2024-04-25"
 output: html_document
 ---
@@ -8,8 +7,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-# Solutions to Lab3 problems
 
 1.  Create five samples of 25 observations from a normal distribution with mean 200, and standard deviation 100. Compute the mean of each sample, and plot the means in a graph using ggplot2. (1 point)
 
