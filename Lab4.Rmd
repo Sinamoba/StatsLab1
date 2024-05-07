@@ -1,0 +1,61 @@
+---
+title: "Lab4"
+output: html_document
+date: "2024-05-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Estimate the letter occurrence probabilities of all 26 letters in English by measuring a paragraph of English text from wikipedia. (hint use strsplit() to split a paragraph into individual letters) (1 point).
+
+```{r}
+library(tidyverse)
+paragraph <- "Kahneman\'s lengthy collaboration with Amos Tversky began in 1969, after Tversky gave a guest lecture at one of Kahneman\'s seminars at Hebrew University.[6] Their first jointly written paper, \"Belief in the Law of Small Numbers,\" was published in 1971. They published seven journal articles in the years 1971 to 1979. They flipped a coin to determine whose name would appear first on their initial paper and alternated thereafter.[16] Their article \"Judgment Under Uncertainty: Heuristics and Biases\" introduced the notion of anchoring. Kahneman and Tversky spent an entire year at an office in the Van Leer Institute in Jerusalem, writing this paper. They spent more than three years revising an early version of prospect theory that was completed in early 1975. The final version was published in 1979.[10] The pair also teamed with Paul Slovic to edit a compilation entitled \"Judgement Under Uncertainty: Heuristics and Biases\" (1982) that was a summary of their work and of other recent advances that had influenced their thinking. Kahneman was ultimately awarded the Nobel Memorial Prize in Economics in 2002 \"for having integrated insights from psychological research into economic science, especially concerning human judgment and decision-making under uncertainty\".[17] Kahneman left Hebrew University in 1978 to take a position at the University of British Columbia.[6] In 2021, Kahneman co-authored a book with Olivier Sibony and Cass Sunstein, titled Noise: A Flaw in Human Judgment.[18]"
+par_letters <- str_split(paragraph, "") |> unlist()
+par_letters <- str_to_lower(par_letters)
+par_letters <- par_letters[par_letters %in% letters]
+letters_df <- data.frame(letter = par_letters) |>
+  group_by(letter) |>
+  summarise(n = n(), prob = n/length(par_letters))
+knitr::kable(letters_df)
+```
+2. Generate “random” strings of letters that are sampled from a distribution where letter occurrence probability is the same as natural English. Use the probabilities for each letter from this [wikipedia article](https://en.wikipedia.org/wiki/Letter_frequency), or use your own estimates from the previous question (2 points).
+```{r}
+strings <- replicate(20 ,sapply(2:6, function(n){
+  ind_letter <- sample(letters_df$letter, n, replace = TRUE, prob = letters_df$prob)
+  str_flatten(ind_letter)
+}))
+strings <- c(strings)
+strings
+```
+3. Generate a random walk of 10,000 steps. In a random walk, you are simulating the process of randomly taking a step up or down, as if you are on an infinite staircase. At each step you flip a coin. If you get heads you go up one step, if you get tails you go down one step. Start on step 0, then simulate a random walk for 10,000 steps. Your vector should preserve the step number for each step. For example, if the the first three steps were all heads, then the vector would begin with 0,1,2,3, which indicates a single step up each time. Plot the first 1,000 steps. (1 point)
+```{r}
+position <- c(0)
+steps <- c(-1,1)
+for(i in 2:10001){
+  step <- sample(steps, 1, replace = T)
+  new <- step + position[length(position)]
+  position[i] <- new
+}
+position_df <- data.frame(steps = 0:10000, position = position)
+position_df |> filter(steps <= 1000) |>
+  ggplot(aes(x = steps, y = position)) +
+  geom_line()
+```
+
+4. What was the most positive and most negative step reached out of 10,000? (1 point)
+```{r}
+min(position)
+max(position)
+```
+5. What was the longest run of steps where all steps were positive numbers. For example, in the sequence: 1,2,3,2,1,0,-1,-2,-1,-2,-1,0,1,2,3; the answer is 5 because the first five values were all positive, and this was the longest sequence of positive values. (1 point).
+```{r}
+position2 <- ifelse(position > 0, "p", "nz")
+runs <- rle(position2)
+runs$lengths[which(runs$values == "p")] |> max()
+```
+
+
+
