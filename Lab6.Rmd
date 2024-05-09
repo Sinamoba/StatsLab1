@@ -1,0 +1,77 @@
+---
+title: "Lab6"
+output: html_document
+date: "2024-05-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+1. Write a function that conducts a randomization test for the mean difference between two groups, and show that it works. Specifically, using your function, conduct a randomization test on the same data we used in the above example from lab. Report the results and briefly discuss what the results of the randomization tell you. (6 points). Extra: if the observed mean difference in the experiment was found to be .5, what would you have concluded from the randomization test?   
+
+Inputs:
+
+* the inputs should include a vector for group 1, and vector for group 2, and the number of permutations/re-samplings of the data to create.  
+
+Outputs:
+
+* output each group mean, and the difference between group means
+* output a histogram of the sampling distribution of the possible mean differences produced by the randomization process
+* output the probability or odds of obtaining the observed mean difference or larger.  
+
+Optional:
+
+* include the ability to calculate the probability of obtaining any mean difference or larger  
+* deal with negative difference scores appropriately  
+* add one or two-tailed test options
+
+```{r}
+dat <- read_csv("data/SchroederEpley2015data.txt")
+```
+```{r}
+randomize_test <- function(group1, group2, n){
+  
+  # the list object "descrip" contains the observed means and the difference between them
+  descrip <- setNames(list(mean(group1), mean(group2)), c(paste("mean", deparse((substitute(group1))), sep = "_"), 
+                                                          paste("mean", deparse((substitute(group2))), sep = "_")))
+  descrip[["mean_dif"]] <- mean(group1) - mean(group2)
+  
+  # shuffling the values in the groups resulting in a matrix with n columns 
+  distribution <- c(group1, group2)
+  resample <- replicate(n, {
+    sample(distribution)
+  })
+  
+  # calculating the means and the difference of them for each resample (total of n)
+  means_group1 <- apply(resample[1:length(group1),],2, mean)
+  means_group2 <- apply(resample[-(1:length(group1)),],2, mean)
+  means_diff <- means_group1 - means_group2
+  
+  # plotting the histogram
+  hist(means_diff)
+  # output is a list of original mean and differences, resampled ones, and two-tailed p.value
+  return(list(original = descrip,
+              resampled = data.frame(means_group1, means_group2, means_diff),
+              prob = mean(abs(means_diff) >= abs(descrip[[3]]))))
+}
+
+audio <- dat |> filter(CONDITION == 1) |> pull(Intellect_Rating)
+visual <- dat |> filter(CONDITION == 0) |> pull(Intellect_Rating)
+
+results <- randomize_test(visual, audio, 10000)
+```
+```{r}
+results$original
+results$prob
+```
+*The output of `results$prob` shows us that there is `r format(results$prob, scientific = FALSE)` chance that, given the values of two groups are assigned randomly, we obtain the observed mean difference. As the convention for the social sciences is 0.05 for the threshold of this value, we consider anything lower than 0.05 as a marker for the significance of the observed mean differences. That is the difference could be due to a real difference in the groups than mere chance. *   
+
+*As for the mean difference of 0.5, we can obtain the probability by running the following code:*
+```{r}
+new_md <- 0.5
+mean(abs(results$resampled$means_diff) >= abs(new_md))
+```
+
+
