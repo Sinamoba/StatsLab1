@@ -1,0 +1,47 @@
+---
+title: "Lab7"
+output: html_document
+date: "2024-05-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+```
+1. A test-taker answered 50 true/false questions and received a score of 60% correct. Report the results of a binomial test and explain whether you think the test-score could be produced by the test-taker randomly guessing on each question. (2 points)
+
+```{r}
+binom.test(0.6*50, 50, alternative = "greater")
+```
++ *The results show that the probability that a random binomial process could produce 30 or more correct answers out of 50 is 0.1013; which is not small enough in order to reject the null hypothesis suggesting that the test-taker is randomly guessing the answer.*  
+
+
+2. An examiner wants to make a TRUE/FALSE test, but is still deciding how many questions they will include. They want to make sure that it would be very difficult to simply randomly guess and be able to score any higher than 55% percent. How many questions would the examiner need to use to be confident that scores of 55% or higher were not produced by chance? (2 points)
+
+```{r}
+Ns <-  sapply(seq(100, 1000, 5), function(n){
+        prob <- sum(dbinom(x = as.integer(n*0.55):n, n, prob = 0.5))
+        if(prob < 0.05) n 
+       })
+Ns |> unlist() |> min()
+
+```
+3. A test has 5 TRUE/FALSE questions (each with one right answer) and 5 multiple choice questions with four choices each (each with only one right answer).  
+
+* create a sampling distribution or probability distribution to illustrate how a random chance process could perform on this test. (1 point)  
+
+* What is the probability that randomly guessing on each question could allow a person to receive 75% or greater on this test? (1 point)
+
+```{r}
+TFq <- c(0,1)
+MCq <- c(0, 0, 0, 1)
+sample <-  replicate(500, {
+      answer_p1 <- sample(TFq, 5, replace = TRUE)
+      answer_p2 <- sample(MCq, 5, replace = TRUE)
+      c(answer_p1, answer_p2)
+      })
+mean(colSums(sample) >= 7.5)
+```
+
