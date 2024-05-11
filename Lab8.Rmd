@@ -1,0 +1,56 @@
+---
+title: "Lab8"
+output: html_document
+date: "2024-05-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+```
+1. Write a function to convert a vector of raw-scores into z-scores. The function should have inputs for the vector, the mean and sd of the normal distribution, and should return a vector of zscores. (1 point). Also, demonstrate that the function works correctly (1 point). How you make the demonstration is up to you.   
+
+* Advanced: Have an option so that the function will convert the raw scores to zscores in one of two ways:  
+
+  + using user provided mean and standard deviation  
+
+  + using the calculated mean and standard deviation from the raw scores  
+
+```{r}
+zscore_convert <- function(score, mean = NULL, sd = NULL){
+  Mean <- ifelse(is.null(mean), mean(score), mean)
+  SD <- ifelse(is.null(sd), sd(score), sd)
+  (score - Mean)/SD
+}
+scores <- rnorm(1000, 100, 15)
+mean_scores <- mean(scores)
+sd_scores <- sd(scores)
+std_scores <- zscore_convert(scores)
+
+identical(sum(scores > mean_scores & scores < mean_scores + sd_scores),
+          sum(std_scores > 0 & std_scores < 1))
+identical(sum(scores > mean_scores + sd_scores & scores < mean_scores + 2*sd_scores),
+          sum(std_scores > 1 & std_scores < 2))
+identical(sum(scores > mean_scores + 2*sd_scores & scores < mean_scores + 3*sd_scores),
+          sum(std_scores > 2 & std_scores < 3))
+
+v <- seq(-10, 10, 2)
+zscore_convert(v, 10, 2)
+```
+2. Base R does not have a function for a z-test. Write a function to accomplish a one-sample z-test. Remember, a one-sample z test is used to compare the probability of obtaining the sample mean (or larger or smaller) if it came from a known normal distribution. (2 points)
+* Use your z-test function to conduct a test of the following. A sample of 25 scores is taken. The mean of the sample is 50. The sample is assumed to have been taken from a normal distribution with mean 40 and standard deviation 7. Report a one-tailed z-test, examining the probability of obtaining a sample of greater than 50 in this situation. Report the results, and give a brief sentence explaining the result and the inference you make (2 points).
+
+```{r}
+z_test <- function(smean, n, pmean, psd){
+  p_value <- ifelse(smean > pmean,
+              pnorm(smean, pmean, psd/sqrt(n), lower.tail = FALSE),
+              pnorm(smean, pmean, psd/sqrt(n)))
+  return(cat("The p_value of the one-tailed z-test is", p_value))
+}
+z_test(50, 25, 40, 7)
+
+```
+  + *As the result of our z_test reveals, the p_value is very small indicating that the probability of obtaining a sample of 25 values with mean 50 or higher for the given normal population is really low.*
+
