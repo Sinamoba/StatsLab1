@@ -1,0 +1,37 @@
+---
+title: "Lab9"
+output: html_document
+date: "2024-05-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(readxl)
+```
+1. The following paper links to open data, and describes a design where two chi-square tests are performed for Experiment 1 (A copy of this paper will be made available).   
+
+Silver, A. M., Stahl, A. E., Loiotile, R., Smith-Flores, A. S., & Feigenson, L. (2020). When Not Choosing Leads to Not Liking: Choice-Induced Preference in Infancy. Psychological Science, 0956797620954491.   
+
+Obtain the data from the online repository, show your code for loading it into R, then conduct the same tests reported in Experiment 1 that the authors conducted. These include one binomial test, and two chi-square tests. Briefly report your re-analysis, and discuss whether you obtained the same values as the authors did (6 points).   
+
+```{r}
+When_not_choosing_leads_to_not_liking_Data <- read_excel("data/When not choosing leads to not liking_Data.xlsx")
+exp1 <- When_not_choosing_leads_to_not_liking_Data |> filter(ExperimentNumber == 1)
+binom.test(sum(exp1$`Infant Chose C`), 
+           n = length(exp1$`Infant Chose C`),
+           alternative = "two.sided")
+age_t1 <- table(exp1 |> select(AgeMonths, `Infant Chose C`))
+age_m1 <- matrix(age_t1, nrow = 20)
+chisq.test(age_m1)
+gender_t1 <- table(exp1 |> select(Gender, `Infant Chose C`))
+gender_m1 <- gender_t1 |> matrix(nrow = 2)
+chisq.test(gender_m1)
+```
+*I think the continuity correction should be applied in this situation but to replicate the paper's results, I will set it off.*
+```{r}
+chisq.test(gender_m1, correct = FALSE)
+```
+
