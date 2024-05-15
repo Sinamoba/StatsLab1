@@ -1,0 +1,78 @@
+---
+title: "Lab10"
+output: html_document
+date: "2024-05-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+```
+1. Your task is to obtain the data from the following paper and conduct a reproducible analysis of their results.  
+
+Rosenbaum, D., Mama, Y., & Algom, D. (2017). Stand by Your Stroop: Standing Up Enhances Selective Attention and Cognitive Control. Psychological science, 28(12), 1864-1867.
+
+Note, the paper, the data, and an existing reproducible analysis of this data is available at https://crumplab.github.io/statisticsLab/lab-10-factorial-anova.html#important-stuff-4
+
+The re-analysis should focus only on Experiment 3. There are three main goals  
+
+1. Reproduce as much of the analysis as possible using only paired-sample t-tests. Note, the authors reported a 2x2 repeated measures ANOVA, but consider how the same questions could be answered by t-tests (2 points)  
+
+```{r}
+dat <- read_csv("data/stroop_stand.csv")
+sit_test <- t.test(dat$incongruent_sit, dat$congruent_sit, paired = TRUE)
+sit_test
+stand_test <- t.test(dat$incongruent_stand, dat$congruent_stand, paired = TRUE)
+stand_test
+sit_difference <- dat$incongruent_sit - dat$congruent_sit
+stand_difference <- dat$incongruent_stand - dat$congruent_stand
+difference_test <- t.test(sit_difference, stand_difference, paired = TRUE)
+difference_test
+```
+2. Reproduce a graph of the means, like shown in the paper (2 points)  
+
+```{r}
+dat_tidy <- dat |> mutate(id = 1:nrow(dat), .before = 1) |>
+  pivot_longer(2:5, names_to = "stimuli_condition", values_to = "RT") |>
+  separate_wider_delim(stimuli_condition, delim = "_", names = c("stimuli", "condition"))
+dat_tidy |> group_by(condition, stimuli) |>
+  summarise(RT_bar = mean(RT), SEM = sd(RT)/sqrt(n())) |> 
+  ggplot(aes(x = condition, fill = stimuli, y = RT_bar)) +
+  geom_bar(position = "dodge", stat = "identity", width = 0.5) +
+  geom_errorbar(aes(ymin = RT_bar - SEM, ymax = RT_bar +SEM), position =position_dodge(0.5), width = 0.1) +
+  coord_cartesian(ylim = c(500, 1000)) +
+  scale_y_continuous(labels = seq(500, 1000, 50), breaks = seq(500, 1000, 50)) +
+  scale_x_discrete(labels = c("sitting", "standing")) +
+  labs(x = NULL, y= "Response Time (ms)") +
+  theme_classic()
+```
+
+
+3. Present a power-curve analysis for the design. (2 points)  
+
+```{r}
+effect_sizes <- seq(0, 1, 0.05)
+probsOfDetection <- sapply(effect_sizes, function(d){
+              p_values <- replicate(10000, {
+                  group1 <- rnorm(50, 0, 1)
+                  group2 <- group1 + rnorm(50, d, 1)
+                  paired_t <- t.test(group2, group1, paired = TRUE)
+                  paired_t$p.value
+                })
+            mean(p_values < 0.05)
+          })
+data.frame(effect_sizes, probsOfDetection) |>
+  ggplot(aes(x = effect_sizes, y  = probsOfDetection)) +
+  geom_line() +
+  geom_point() +
+  labs(y = "probability of difference detection")
+
+```
+
+
+
+
+
+
