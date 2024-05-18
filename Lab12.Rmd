@@ -1,0 +1,31 @@
+---
+title: "Lab12"
+output: html_document
+date: "2024-05-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+```
+1. Should you do a linear regression on this data? Explain.   
+
+```{r}
+Y <- c(10,9,8,7,6,5,4,3,2,1,2,3,4,5,6,7,8,9,10)
+X <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)
+```
+
+
+```{r}
+lm_fit <- lm(Y ~ X)
+plot(lm_fit, which = 1)
+data.frame(X, Y) |>
+  ggplot(aes(x = X, y = Y)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+
++ *It is clear from both plots that linear regression is incapable of representing the relationship between the two variables. The first plot shows the linearity of the relationship. For a linear relationship, the points should not form a pattern around the y = 0 line, which is not the case here. The second plot simply shows the scatter-plot of the data and a blue regression line trying to fit it; and failing miserably!*
